@@ -218,3 +218,4 @@ LIMIT 1
 2023-01-07 15:22:34.715 +03:00 [INF] Sending file. Request path: '/favicon-32x32.png'. Physical path: 'N/A'
 2023-01-07 15:22:34.716 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:8060/swagger/favicon-32x32.png - - - 200 628 image/png 1.5036ms
 2023-01-07 15:22:34.900 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:8060/swagger/v1/swagger.json - - - 200 - application/json;charset=utf-8 236.3806ms
+2023-01-07 15:54:52.439 +03:00 [INF] Application is shutting down...
