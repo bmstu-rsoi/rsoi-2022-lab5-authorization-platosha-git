@@ -80,7 +80,7 @@
 							"path": [
 								"oauth2",
 								"default",
-								"v3",
+								"v1",
 								"token"
 							]
 						}
