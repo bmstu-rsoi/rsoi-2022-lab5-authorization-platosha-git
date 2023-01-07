@@ -1,5 +1,7 @@
 ﻿using System.Reflection;
+using APIGateway.AuthenticationMiddleware;
 using APIGateway.Domain;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using Serilog;
 
@@ -17,19 +19,56 @@ namespace APIGateway
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddSwaggerGenNewtonsoftSupport();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo {Title = "Gateway", Version = "v1"});
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
-                
+
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "JSON Web Token based security",
+                });
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement()
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference 
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        }, 
+                        new string[] { }
+                    }
+                });
             });
-            services.AddSwaggerGenNewtonsoftSupport();
 
+            services.Configure<JwtConfiguration>(Configuration.GetSection("Jwt"));
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = Configuration.GetValue<string>("JwtConfiguration:Issuer");
+                    options.Audience = Configuration.GetValue<string>("JwtConfiguration:Audience");
+                });
+            services.AddAuthorization();
+            
             services.AddScoped<IRentalsService, RentalsService>();
-
+            services.AddControllers();
+            
             services.Configure<CarsSettings>(Configuration.GetSection("CarsService"));
             services.Configure<PaymentsSettings>(Configuration.GetSection("PaymentsService"));
             services.Configure<RentalsSettings>(Configuration.GetSection("RentalsService"));
@@ -49,10 +88,11 @@ namespace APIGateway
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Gateway v1"));
 
-            //app.UseHttpsRedirection();
-
             app.UseRouting();
+            
+            app.UseMiddleware<AuthenticationMiddleware.AuthenticationMiddleware>();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });

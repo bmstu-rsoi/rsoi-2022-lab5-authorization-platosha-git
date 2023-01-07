@@ -1,8 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Net.Mime;
+using System.Security.Claims;
 using APIGateway.Domain;
 using APIGateway.ModelsDTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using ModelsDTO.Rentals;
@@ -10,6 +12,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace APIGateway.Controllers
 {
+    [Authorize]
     [ApiController]
     [Produces(MediaTypeNames.Application.Json)]
     [Route("/api/v1/rental")]
@@ -30,9 +33,10 @@ namespace APIGateway.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<RentalResponse>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAllRentalsByUsername(
-            [Required, FromHeader(Name = "X-User-Name")] string username)
+        public async Task<IActionResult> GetAllRentalsByUsername()
         {
+            var username = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
             try
             {
                 var rentals = await _rentalsService.GetAllAsync(username);
@@ -54,9 +58,10 @@ namespace APIGateway.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RentalResponse))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetRentalByUid([Required, FromHeader(Name = "X-User-Name")] string username,
-            Guid rentalUid)
+        public async Task<IActionResult> GetRentalByUid(Guid rentalUid)
         {
+            var username = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
             try
             {
                 var response = await _rentalsService.GetAsyncByUid(username, rentalUid);
@@ -81,9 +86,10 @@ namespace APIGateway.Controllers
         [SwaggerResponse(StatusCodes.Status200OK, type: typeof(CreateRentalResponse),
             description: "Информация о бронировании авто")]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "Ошибка валидации данных")]
-        public async Task<IActionResult> BookCar([Required, FromHeader(Name = "X-User-Name")] string username,
-            [FromBody] CreateRentalRequest request)
+        public async Task<IActionResult> BookCar([FromBody] CreateRentalRequest request)
         {
+            var username = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
             try
             {
                 if (!ModelState.IsValid)
@@ -114,9 +120,10 @@ namespace APIGateway.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> FinishBookCar([Required, FromHeader(Name = "X-User-Name")] string username,
-            [FromRoute] Guid rentalUid)
+        public async Task<IActionResult> FinishBookCar([FromRoute] Guid rentalUid)
         {
+            var username = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
             try
             {
                 await _rentalsService.FinishRent(username, rentalUid);
@@ -138,13 +145,14 @@ namespace APIGateway.Controllers
         /// <param name="X-User-Name"> Имя пользователя </param>
         /// <response code="204"> Аренда успешно отменена </response>
         /// <response code="404"> Аренда не найдена </response>
-        [HttpDelete("{rentalUid}")]
+        [HttpDelete("{rentalUid:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> CancelBookCar([Required, FromHeader(Name = "X-User-Name")] string username,
-            [FromRoute] Guid rentalUid)
+        public async Task<IActionResult> CancelBookCar([FromRoute] Guid rentalUid)
         {
+            var username = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
             try
             {
                 await _rentalsService.CancelRent(username, rentalUid);

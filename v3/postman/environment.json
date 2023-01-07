@@ -4,32 +4,32 @@
   "values": [
     {
       "key": "serviceUrl",
-      "value": "",
+      "value": "http://gateway.platosha-git.cloud.okteto.net",
       "enabled": true
     },
     {
       "key": "identityProviderUrl",
-      "value": "",
+      "value": "https://dev-73993264.okta.com",
       "enabled": true
     },
     {
       "key": "username",
-      "value": "",
+      "value": "gzs88089@cdfaq.com",
       "enabled": true
     },
     {
       "key": "password",
-      "value": "",
+      "value": "testpswrd",
       "enabled": true
     },
     {
       "key": "clientId",
-      "value": "",
+      "value": "0oa7v3pp4ruaYipYt5d7",
       "enabled": true
     },
     {
       "key": "clientSecret",
-      "value": "",
+      "value": "L_xBbSrPvzotXBMk9qHO0nR8VXIY7IWZZYC1o21a",
       "enabled": true
     }
   ],

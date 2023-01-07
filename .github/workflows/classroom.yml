@@ -2,6 +2,11 @@ name: GitHub Classroom Workflow
 on:
   push:
     branches: [ develop ]
+
+env:
+  KUBE_HOST: ${{ secrets.KUBE_HOST }}
+  KUBE_TOKEN: ${{ secrets.KUBE_TOKEN }}
+
 jobs:
   build:
     name: Autograding
@@ -14,13 +19,13 @@ jobs:
       - uses: docker/setup-buildx-action@v2
 
       # TODO build, publish to docker hub, deploy to k8s
-      - name: Login to Docker Hub
+      - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Build and publish images
+      - name: Build images
         timeout-minutes: 15
         run: |
           sudo chmod +x ./scripts/build-images.sh
@@ -28,19 +33,16 @@ jobs:
 
       - name: Deploy
         run: |
-          echo "run deploy"
-          echo kubectl config set-cluster rsoi-cars-service-cluster --server="KUBE_HOST" --insecure-skip-tls-verify=true
           kubectl config set-cluster rsoi-cars-service-cluster --server="$KUBE_HOST" --insecure-skip-tls-verify=true
-          echo kubectl config set-credentials cloud_okteto_com-user --token=KUBE_TOKEN
           kubectl config set-credentials cloud_okteto_com-user --token="$KUBE_TOKEN"
-          echo kubectl config set-context default --cluster=rsoi-cars-service-cluster --user=cloud_okteto_com-user --namespace=\"platosha-git\"
           kubectl config set-context default --cluster=rsoi-cars-service-cluster --user=cloud_okteto_com-user --namespace="platosha-git"
           
           kubectl config use-context default
-          echo kubectl get pods
           kubectl get pods
           cd k8s && helm delete services && helm install services ./services-chart
-          sleep 45
+      
+      - name: Timeout
+        run: sleep 45
 
       - name: Run API Tests
         uses: matt-ball/newman-action@master
